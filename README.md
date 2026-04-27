@@ -2,20 +2,6 @@
 
 A full-stack deployment platform that enables users to deploy applications from Git repositories or direct file uploads. The platform simulates containerized deployments with real-time log streaming and deployment management.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Setup Instructions](#setup-instructions)
-  - [Local Development](#local-development)
-  - [Docker Deployment](#docker-deployment)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Environment Variables](#environment-variables)
-- [Development Workflow](#development-workflow)
-
 ---
 
 ## Overview
@@ -89,7 +75,6 @@ Brimble is a deployment platform built with:
 - [Docker Compose](https://docs.docker.com/compose/install/) 2.0+
 - [Go](https://golang.org/dl/) 1.22+ (for local development)
 - [Node.js](https://nodejs.org/) 20+ (for local development)
-- [pnpm](https://pnpm.io/installation) (package manager)
 
 ### Optional
 
@@ -104,14 +89,14 @@ The fastest way to get started is using Docker Compose:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Brownei/brimble-sub.git
 cd brimble-sub
 
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Access the application
 # Frontend: http://localhost:8000
@@ -131,10 +116,10 @@ Services will be available after approximately 30 seconds.
 ```bash
 # Start PostgreSQL via Docker
 docker run -d \
-  --name brimble-postgres \
-  -e POSTGRES_USER=brimble \
-  -e POSTGRES_PASSWORD=brimble \
-  -e POSTGRES_DB=brimble \
+  --name db \
+  -e POSTGRES_USER=db \
+  -e POSTGRES_PASSWORD=db \
+  -e POSTGRES_DB=db \
   -p 5432:5432 \
   postgres:16-alpine
 ```
@@ -168,10 +153,10 @@ The server will start on `http://localhost:3333`.
 cd client
 
 # Install dependencies
-pnpm install
+npm install
 
 # Start development server
-pnpm dev
+npm run dev
 ```
 
 The client will start on `http://localhost:3000`.
@@ -182,16 +167,13 @@ The client will start on `http://localhost:3000`.
 
 ```bash
 # Build and start all services
-docker-compose up --build -d
-
-# Scale specific services (if needed)
-docker-compose up -d --scale server=2
+docker compose up -d
 
 # Stop all services
-docker-compose down
+docker compose down 
 
 # Stop and remove volumes (WARNING: deletes data)
-docker-compose down -v
+docker compose down -volumes
 ```
 
 #### Development with Docker
@@ -389,20 +371,19 @@ lsof -i :8000  # Caddy
 **Database Connection Issues**
 ```bash
 # Verify PostgreSQL is running
-docker-compose ps postgres
+docker compose ps brimble-postgres
 
 # Check logs
-docker-compose logs postgres
+docker compose logs brimble-postgres
 ```
 
 **Caddy Certificate Issues**
 ```bash
 # Remove Caddy data to regenerate certificates
-docker-compose down --volumes
-docker volume rm brimble-sub_caddy_data
+docker compose down --volumes
+docker rmi caddy:2-alpine
 docker-compose up -d
 ```
 
 ---
 
-# brimble-sub
