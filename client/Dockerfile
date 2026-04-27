@@ -1,36 +1,14 @@
-# Brimble Client - React + Vite Application
-# Served with Node.js static server (no Nginx)
-
-# Build stage
-FROM node:20-alpine AS builder
-
+FROM node:24-alpine
 WORKDIR /app
 
-# Copy package files
 COPY package.json package-lock.json ./
-
-# Install dependencies
-RUN npm install --frozen-lockfile
-
-# Copy source code
+RUN npm ci --frozen-lockfile
 COPY . .
 
-# Build the application
+# Build
 RUN npm run build
 
-# Production stage - use Node.js to serve static files
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Install serve package globally
-RUN npm install -g serve
-
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
-
-# Expose port
+ENV PORT=3000
 EXPOSE 3000
-
-# Serve the static files with serve
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Vite preview serves both client AND handles SSR through the server
+CMD ["npx", "vite", "preview", "--port", "3000", "--host"]
