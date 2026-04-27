@@ -1,0 +1,54 @@
+{
+  "$schema": "https://railpack.com/schema.json",
+  "name": "brimble-deployment-platform",
+  "version": "1.0.0",
+  "services": {
+    "server": {
+      "name": "brimble-server",
+      "context": "./server",
+      "type": "go",
+      "build": {
+        "command": "go build -o bin/main .",
+        "output": "./bin/main"
+      },
+      "start": {
+        "command": "./bin/main",
+        "port": 3333
+      },
+      "environment": {
+        "DB_HOST": "postgres",
+        "DB_PORT": "5432",
+        "DB_USER": "brimble",
+        "DB_PASSWORD": "brimble",
+        "DB_NAME": "brimble",
+        "APP_PORT": "3333"
+      },
+      "healthcheck": {
+        "path": "/",
+        "port": 3333
+      },
+      "volumes": [
+        {
+          "source": "deployments",
+          "target": "/app/deployments"
+        }
+      ]
+    },
+    "client": {
+      "name": "brimble-client",
+      "context": "./client",
+      "type": "node",
+      "build": {
+        "command": "pnpm install && pnpm build",
+        "output": "./dist"
+      },
+      "start": {
+        "command": "pnpm preview --host --port 3000",
+        "port": 3000
+      },
+      "environment": {
+        "VITE_API_BASE_URL": "http://api.localhost/v1"
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+# Caddyfile - Brimble Deployment Platform Reverse Proxy
+# This is the single point of ingress for all services
+
+# API endpoint - all API calls go here
+api.localhost {
+    # Reverse proxy to the Go server
+    reverse_proxy server:3333
+
+    # CORS headers
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header Access-Control-Allow-Headers "Content-Type, Authorization"
+
+    # Handle preflight requests
+    @options method OPTIONS
+    handle @options {
+        respond 204
+    }
+
+    # Logging
+    log {
+        output file /data/access.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# Main application - frontend
+localhost {
+    # Reverse proxy to the React client
+    reverse_proxy client:3000
+
+    # Enable compression
+    encode gzip zstd
+
+    # Security headers
+    header X-Frame-Options "SAMEORIGIN"
+    header X-Content-Type-Options "nosniff"
+    header X-XSS-Protection "1; mode=block"
+    header Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Logging
+    log {
+        output file /data/access.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# SSE (Server-Sent Events) endpoint for real-time logs
+# This handles the streaming logs without buffering
+sse.localhost {
+    reverse_proxy server:3333 {
+        # Important for SSE: disable buffering
+        flush_interval -1
+    }
+}
+
+# Health check endpoint
+health.localhost {
+    respond "OK" 200
+}
+
+# Catch-all for any other hosts (404)
+:80 {
+    respond "Not Found" 404
+}

@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: brimble-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: db
+      POSTGRES_DB: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db -d db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brimble-network
+
+  # Go Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: brimble-server
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: db
+      DB_PASSWORD: db
+      DB_NAME: db
+      APP_PORT: 3333
+    ports:
+      - "3333:3333"
+    volumes:
+      - deployments_data:/app/deployments
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - brimble-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3333/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # React Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: brimble-client
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://api.localhost/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    networks:
+      - brimble-network
+
+  # Caddy Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: brimble-caddy
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - server
+      - client
+    networks:
+      - brimble-network
+
+volumes:
+  postgres_data:
+  deployments_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  brimble-network:
+    driver: bridge
