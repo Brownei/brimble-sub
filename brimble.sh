@@ -85,7 +85,7 @@ setup_hosts() {
 build_all() {
     print_info "Building all services..."
     cd "$PROJECT_ROOT"
-    docker-compose build --no-cache
+    docker compose build --no-cache
     print_success "All services built successfully"
 }
 

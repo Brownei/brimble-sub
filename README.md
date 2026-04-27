@@ -96,7 +96,7 @@ cd brimble-sub
 docker compose up -d
 
 # View logs
-docker compose logs -f
+docker ps
 
 # Access the application
 # Frontend: http://localhost:8000
